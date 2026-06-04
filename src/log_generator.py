@@ -2,6 +2,7 @@ import os
 import re
 import time
 import threading
+from contextlib import asynccontextmanager
 from typing import Dict, Optional
 from fastapi import FastAPI, BackgroundTasks, HTTPException
 from pydantic import BaseModel
@@ -152,9 +153,10 @@ def get_status():
         "generators": status_data
     }
 
-@app.on_event("shutdown")
-def shutdown_event():
+@asynccontextmanager
+def lifespan():
     global producer
+    yield
     print("Shutting down generators...")
     for name, info in generators.items():
         info["running"] = False

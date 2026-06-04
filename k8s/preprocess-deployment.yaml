@@ -1,0 +1,50 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: preprocessing-service
+  namespace: deeplog
+  labels:
+    app: preprocessing-service
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: preprocessing-service
+  template:
+    metadata:
+      labels:
+        app: preprocessing-service
+    spec:
+      containers:
+      - name: preprocessing-service
+        image: asia-northeast3-docker.pkg.dev/my-project/deeplog-repo/preprocessing-service:placeholder
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 8080
+        env:
+        - name: KAFKA_BOOTSTRAP_SERVERS
+          value: "kafka-cluster-kafka-bootstrap.deeplog.svc:9092"
+        - name: KSERVE_ENDPOINT
+          value: "http://deeplog-serving.deeplog.svc.cluster.local/v1/models/deeplog:predict"
+        resources:
+          limits:
+            cpu: 1000m
+            memory: 1Gi
+          requests:
+            cpu: 200m
+            memory: 512Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: preprocessing-service
+  namespace: deeplog
+spec:
+  selector:
+    app: preprocessing-service
+  ports:
+  - name: http
+    protocol: TCP
+    port: 8080
+    targetPort: 8080
+  type: ClusterIP

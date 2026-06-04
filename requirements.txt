@@ -1,0 +1,13 @@
+torch
+pandas
+numpy
+drain3
+mlflow
+tqdm
+scikit-learn
+kafka-python-ng
+fastapi
+uvicorn
+gunicorn
+prometheus-client
+requests

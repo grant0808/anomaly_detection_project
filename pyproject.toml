@@ -1,0 +1,13 @@
+[project]
+name = "anoamy-detection-project"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "certifi==2026.5.20",
+    "charset-normalizer==3.4.7",
+    "idna==3.18",
+    "requests==2.34.2",
+    "urllib3==2.7.0",
+]

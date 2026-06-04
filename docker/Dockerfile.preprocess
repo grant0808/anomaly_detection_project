@@ -1,0 +1,44 @@
+# ==========================================
+# Stage 1: Build Dependencies
+# ==========================================
+FROM python:3.12-slim AS builder
+
+WORKDIR /app
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN pip install --no-cache-dir uv
+
+RUN uv venv /opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
+
+# Copy dependency specifications
+COPY pyproject.toml* requirements.txt* ./
+RUN if [ -f requirements.txt ]; then \
+        uv pip install -r requirements.txt; \
+    else \
+        uv pip install fastapi uvicorn kafka-python-ng prometheus-client drain3 requests gunicorn; \
+    fi
+
+# ==========================================
+# Stage 2: Runtime Image
+# ==========================================
+FROM python:3.12-slim AS runner
+
+WORKDIR /app
+
+COPY --from=builder /opt/venv /opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
+
+# Copy source code and files needed for processing
+COPY src/preprocess_service.py ./src/
+COPY src/preprocess.py ./src/
+# Copy the trained Drain3 config
+COPY src/drain3.ini ./src/
+
+EXPOSE 8080
+
+CMD ["gunicorn", "-w", "4", "-k", "uvicorn.workers.UvicornWorker", "src.preprocess_service:app", "--bind", "0.0.0.0:8080"]

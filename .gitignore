@@ -8,7 +8,7 @@ preprocessed_sample.csv
 src/vocab.json
 src/drain3.ini
 .DS_Store
-
+uv.lock
 
 # ignore md
 IMPLEMENTATION_ROADMAP.md

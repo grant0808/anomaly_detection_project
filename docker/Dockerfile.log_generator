@@ -1,0 +1,48 @@
+# ==========================================
+# Stage 1: Build Dependencies
+# ==========================================
+FROM python:3.12-slim AS builder
+
+WORKDIR /app
+
+# Install system dependencies needed for compiling python packages
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install uv to speed up dependency installation
+RUN pip install --no-cache-dir uv
+
+# Create a virtual environment
+RUN uv venv /opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
+
+# Copy dependency specifications
+COPY pyproject.toml* requirements.txt* ./
+RUN if [ -f requirements.txt ]; then \
+        uv pip install -r requirements.txt; \
+    else \
+        uv pip install fastapi uvicorn kafka-python-ng pydantic gunicorn; \
+    fi
+
+# ==========================================
+# Stage 2: Runtime Image
+# ==========================================
+FROM python:3.12-slim AS runner
+
+WORKDIR /app
+
+# Copy virtual environment from builder stage
+COPY --from=builder /opt/venv /opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
+
+# Copy source code and default config
+COPY src/log_generator.py ./src/
+# Note: In production we will mount the raw logs volume at /app/HDFS_v1
+# but for safety, we create a placeholder directory
+RUN mkdir -p /app/HDFS_v1
+
+EXPOSE 8000
+
+# Run FastAPI app with gunicorn/uvicorn workers for production concurrency
+CMD ["gunicorn", "-w", "2", "-k", "uvicorn.workers.UvicornWorker", "src.log_generator:app", "--bind", "0.0.0.0:8000"]

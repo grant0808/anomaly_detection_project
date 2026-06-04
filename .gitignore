@@ -1,0 +1,15 @@
+/HDFS_v1
+.venv/
+__pycache__/
+*.pyc
+mlruns/
+models/
+preprocessed_sample.csv
+src/vocab.json
+src/drain3.ini
+.DS_Store
+
+
+# ignore md
+IMPLEMENTATION_ROADMAP.md
+PHASE1.md

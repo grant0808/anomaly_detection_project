@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
       - name: preprocessing-service
-        image: asia-northeast3-docker.pkg.dev/pro-platform-495513-b9/deeplog-repo/preprocessing-service:e16036b6033f5f20585df666db4d1e975c455a54
+        image: asia-northeast3-docker.pkg.dev/pro-platform-495513-b9/deeplog-repo/preprocessing-service:d8a3e7f98b9e493d9bd9fbd4b19672d88bab975a
         imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 8080

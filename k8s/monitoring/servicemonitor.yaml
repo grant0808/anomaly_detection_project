@@ -1,0 +1,15 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: preprocessing-service-monitor
+  namespace: deeplog
+  labels:
+    release: prometheus-stack # Integrates with the kube-prometheus-stack instance
+spec:
+  selector:
+    matchLabels:
+      app: preprocessing-service
+  endpoints:
+  - port: http
+    path: /metrics
+    interval: 10s

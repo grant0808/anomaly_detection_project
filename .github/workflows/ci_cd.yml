@@ -20,8 +20,8 @@ jobs:
     
     # Add permissions for Workload Identity Federation if used
     permissions:
-      contents: 'write'
-      id-token: 'write'
+      contents: read
+      id-token: write
 
     steps:
     - name: Checkout Repository

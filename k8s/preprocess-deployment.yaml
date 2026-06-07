@@ -24,8 +24,16 @@ spec:
         env:
         - name: KAFKA_BOOTSTRAP_SERVERS
           value: "kafka-cluster-kafka-bootstrap.deeplog.svc:9092"
+        - name: RAW_LOG_TOPIC
+          value: "hdfs-raw-logs"
+        - name: ALERT_TOPIC
+          value: "anomaly-alerts"
         - name: KSERVE_ENDPOINT
-          value: "http://deeplog-serving.deeplog.svc.cluster.local/v1/models/deeplog:predict"
+          value: "http://deeplog-serving-predictor.deeplog.svc.cluster.local/v1/models/deeplog:predict"
+        - name: WINDOW_SIZE
+          value: "10"
+        - name: TOP_G
+          value: "9"
         resources:
           limits:
             cpu: 1000m

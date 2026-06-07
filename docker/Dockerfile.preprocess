@@ -36,6 +36,8 @@ ENV PATH="/opt/venv/bin:$PATH"
 # Copy source code and files needed for processing
 COPY src/preprocess_service.py ./src/
 COPY src/preprocess.py ./src/
+COPY src/parser.py ./src/
+COPY src/vocab.json ./src/
 # Copy the trained Drain3 config
 COPY src/drain3.ini ./src/
 

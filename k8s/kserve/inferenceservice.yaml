@@ -1,0 +1,38 @@
+apiVersion: serving.kserve.io/v1beta1
+kind: InferenceService
+metadata:
+  name: deeplog-serving
+  namespace: deeplog
+  annotations:
+    serving.kserve.io/deploymentMode: Serverless
+spec:
+  predictor:
+    serviceAccountName: deeplog-model-reader
+    containers:
+      - name: kserve-container
+        image: asia-northeast3-docker.pkg.dev/pro-platform-495513-b9/deeplog-repo/deeplog-predictor:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+          - containerPort: 8080
+            protocol: TCP
+        env:
+          - name: MODEL_NAME
+            value: deeplog
+          - name: MODEL_DIR
+            value: /mnt/models
+          - name: VOCAB_PATH
+            value: /mnt/models/vocab.json
+          - name: WEIGHTS_PATH
+            value: /mnt/models/deeplog_lstm.pth
+          - name: WINDOW_SIZE
+            value: "10"
+          - name: TOP_G
+            value: "9"
+        resources:
+          requests:
+            cpu: 500m
+            memory: 1Gi
+          limits:
+            cpu: "2"
+            memory: 2Gi
+    storageUri: gs://deeplog-mlflow-model-registry/deeplog-serving/current

@@ -1,12 +1,30 @@
 apiVersion: kafka.strimzi.io/v1
+kind: KafkaNodePool
+metadata:
+  name: dual-role
+  namespace: deeplog
+  labels:
+    strimzi.io/cluster: kafka-cluster
+spec:
+  replicas: 3
+  roles:
+    - controller
+    - broker
+  storage:
+    type: jbod
+    volumes:
+      - id: 0
+        type: persistent-claim
+        size: 50Gi
+        deleteClaim: false
+---
+apiVersion: kafka.strimzi.io/v1
 kind: Kafka
 metadata:
   name: kafka-cluster
   namespace: deeplog
 spec:
   kafka:
-    version: 3.7.0
-    replicas: 3
     listeners:
       - name: plain
         port: 9092
@@ -26,19 +44,6 @@ spec:
       transaction.state.log.min.isr: 2
       default.replication.factor: 3
       min.insync.replicas: 2
-      inter.broker.protocol.version: "3.7"
-    storage:
-      type: persistent-claim
-      size: 50Gi
-      class: standard
-      deleteClaim: false
-  zookeeper:
-    replicas: 3
-    storage:
-      type: persistent-claim
-      size: 10Gi
-      class: standard
-      deleteClaim: false
   entityOperator:
     topicOperator: {}
     userOperator: {}

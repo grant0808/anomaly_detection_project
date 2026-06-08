@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
       - name: log-generator
-        image: asia-northeast3-docker.pkg.dev/pro-platform-495513-b9/deeplog-repo/log-generator:052f59d6374328b8db321489f1b05450558ff6cc
+        image: asia-northeast3-docker.pkg.dev/pro-platform-495513-b9/deeplog-repo/log-generator:2facbf701b677147e818a89a4296bfbd4672b9f1
         imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 8000

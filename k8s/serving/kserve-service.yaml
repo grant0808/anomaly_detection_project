@@ -10,7 +10,7 @@ spec:
     model:
       modelFormat:
         name: mlflow
-      storageUri: gs://deeplog-mlflow-model-registry/deeplog_lstm_model
+      storageUri: gs://deeplog-mlflow-model-registry-hbh/deeplog_lstm_model
       resources:
         limits:
           cpu: "1"

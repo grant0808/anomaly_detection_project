@@ -33,13 +33,20 @@ def clean_log_message(log_line):
     msg = re.sub(r'\b\d+\b', '[num]', msg)
     return msg
 
+from drain3.file_persistence_handler import FilePersistenceHandler
+
 def parse_logs(log_file_path, max_lines=100000):
     print(f"Starting log parsing on {log_file_path} (max_lines={max_lines})...")
     
     # Configure Drain3 template miner
     config = TemplateMinerConfig()
     config.load(os.path.join(os.path.dirname(__file__), 'drain3.ini'))
-    template_miner = TemplateMiner(config=config)
+    
+    persistence_path = os.path.join(os.path.dirname(__file__), 'drain_state.bin')
+    if os.path.exists(persistence_path):
+        os.remove(persistence_path)
+    persistence_handler = FilePersistenceHandler(persistence_path)
+    template_miner = TemplateMiner(persistence_handler=persistence_handler, config=config)
     
     block_events = {}
     
@@ -70,6 +77,10 @@ def parse_logs(log_file_path, max_lines=100000):
     for cluster in list(template_miner.drain.clusters)[:10]:
         print(f"ID {cluster.cluster_id}: {cluster.get_template()}")
         
+    # Flush latest parser state to disk
+    template_miner.save_state()
+    print(f"Saved Drain3 state to {persistence_path}")
+    
     return block_events, template_miner
 
 if __name__ == '__main__':

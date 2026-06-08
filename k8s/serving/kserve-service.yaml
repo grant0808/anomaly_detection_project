@@ -1,0 +1,20 @@
+apiVersion: serving.kserve.io/v1alpha1
+kind: InferenceService
+metadata:
+  name: deeplog-serving
+  namespace: deeplog
+  annotations:
+    sidecar.istio.io/inject: "true"
+spec:
+  predictor:
+    model:
+      modelFormat:
+        name: mlflow
+      storageUri: gs://deeplog-mlflow-model-registry/deeplog_lstm_model
+      resources:
+        limits:
+          cpu: "1"
+          memory: 2Gi
+        requests:
+          cpu: "500m"
+          memory: 1Gi

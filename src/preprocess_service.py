@@ -34,6 +34,11 @@ ACTIVE_TRACES = Gauge(
     "deeplog_active_traces_count", 
     "Number of active block traces tracked in memory"
 )
+KAFKA_LAG = Gauge(
+    "deeplog_kafka_lag",
+    "Lag of the Kafka consumer group",
+    ["topic", "partition"]
+)
 
 # ==========================================
 # Environment Variables & Config
@@ -57,6 +62,8 @@ event2idx: Dict[str, int] = {}
 idx2event: Dict[int, str] = {}
 block_histories: Dict[str, List[int]] = {}
 consumer_thread: Optional[threading.Thread] = None
+lag_thread: Optional[threading.Thread] = None
+kafka_consumer: Optional[KafkaConsumer] = None
 running = False
 
 # Helper functions for log cleaning (must match parser.py)
@@ -80,7 +87,7 @@ def clean_log_message(log_line):
 # Real-time Kafka Consumer Loop
 # ==========================================
 def kafka_consumer_worker():
-    global running, event2idx, block_histories
+    global running, event2idx, block_histories, kafka_consumer
     
     print("Initializing Real-time Kafka Consumer...")
     
@@ -117,7 +124,7 @@ def kafka_consumer_worker():
     # 3. Connect to Kafka
     bootstrap_list = KAFKA_BOOTSTRAP_SERVERS.split(",")
     try:
-        consumer = KafkaConsumer(
+        kafka_consumer = KafkaConsumer(
             KAFKA_RAW_TOPIC,
             bootstrap_servers=bootstrap_list,
             auto_offset_reset='latest',
@@ -137,7 +144,7 @@ def kafka_consumer_worker():
     # 4. Stream consumption
     while running:
         # Poll messages
-        msg_pack = consumer.poll(timeout_ms=500)
+        msg_pack = kafka_consumer.poll(timeout_ms=500)
         for tp, messages in msg_pack.items():
             for message in messages:
                 raw_log = message.value
@@ -186,10 +193,8 @@ def kafka_consumer_worker():
                     if res.status_code == 200:
                         predictions = res.json().get("predictions", [])
                         if predictions:
-                            # Logits or probability vector
-                            probs = predictions[0]
-                            # Get indices of top-g largest values
-                            top_g_indices = np_top_k(probs, TOP_G)
+                            # predictions[0] is {"top_indices": [...], "top_scores": [...]}
+                            top_g_indices = predictions[0].get("top_indices", [])
                             
                             # Check if the actual current event_idx is in the predicted candidates
                             if event_idx not in top_g_indices:
@@ -224,33 +229,53 @@ def kafka_consumer_worker():
                 ACTIVE_TRACES.set(len(block_histories))
                 LOGS_PROCESSED.labels(status="success").inc()
 
-    consumer.close()
+    kafka_consumer.close()
     producer.close()
     print("Kafka consumer/producer closed.")
 
-def np_top_k(probs: List[float], k: int) -> List[int]:
-    """Helper to find indices of top k elements in a list"""
-    indexed = [(val, idx) for idx, val in enumerate(probs)]
-    indexed.sort(key=lambda x: x[0], reverse=True)
-    return [idx for _, idx in indexed[:k]]
+
+def kafka_lag_worker():
+    global kafka_consumer, running
+    print("Starting Kafka Lag monitoring worker...")
+    while running:
+        if kafka_consumer:
+            try:
+                # Get current assignment of partitions
+                partitions = kafka_consumer.assignment()
+                if partitions:
+                    # Fetch late offset (end offset) for each partition
+                    end_offsets = kafka_consumer.end_offsets(partitions)
+                    for partition in partitions:
+                        # Get current consumer position
+                        position = kafka_consumer.position(partition)
+                        end_offset = end_offsets.get(partition, 0)
+                        lag = max(0, end_offset - position)
+                        KAFKA_LAG.labels(topic=partition.topic, partition=partition.partition).set(lag)
+            except Exception as e:
+                print(f"Error checking Kafka lag: {e}")
+        time.sleep(15)
 
 # ==========================================
 # FastAPI Lifecycle Hooks
 # ==========================================
 @app.on_event("startup")
 def startup_event():
-    global consumer_thread, running
+    global consumer_thread, lag_thread, running
     running = True
     consumer_thread = threading.Thread(target=kafka_consumer_worker, daemon=True)
     consumer_thread.start()
-    print("FastAPI Service started background worker.")
+    lag_thread = threading.Thread(target=kafka_lag_worker, daemon=True)
+    lag_thread.start()
+    print("FastAPI Service started background workers.")
 
 @app.on_event("shutdown")
 def shutdown_event():
-    global running, consumer_thread
+    global running, consumer_thread, lag_thread
     running = False
     if consumer_thread:
         consumer_thread.join(timeout=3)
+    if lag_thread:
+        lag_thread.join(timeout=3)
     print("FastAPI Service shutdown completed.")
 
 @app.get("/healthz")

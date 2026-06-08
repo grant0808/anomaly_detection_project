@@ -1,0 +1,56 @@
+alertmanager:
+  config:
+    global:
+      resolve_timeout: 5m
+      # SMTP Configuration for sending emails
+      smtp_smarthost: 'smtp.gmail.com:587'                     # SMTP server (e.g., Gmail SMTP)
+      smtp_from: 'deeplog-alert@yourdomain.com'                # Sender email address
+      smtp_auth_username: 'deeplog-alert@yourdomain.com'       # SMTP auth username
+      smtp_auth_password: 'YOUR_SMTP_APPLICATION_PASSWORD'      # SMTP auth password / app password
+      smtp_require_tls: true
+    route:
+      group_by: ['alertname', 'cluster', 'service']
+      group_wait: 30s
+      group_interval: 5m
+      repeat_interval: 12h
+      receiver: 'email-notifications'
+      routes:
+      - match:
+          severity: critical
+        receiver: 'email-notifications'
+        continue: true
+    receivers:
+    - name: 'email-notifications'
+      email_configs:
+      - to: 'admin-alerts@yourdomain.com'                      # Recipient email address
+        send_resolved: true
+        headers:
+          subject: '[[{{ .Status | toUpper }}]] DeepLog Pipeline Alert - {{ .GroupLabels.alertname }}'
+        html: |
+          <!DOCTYPE html>
+          <html>
+          <head>
+            <style>
+              body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+              .header { padding: 10px; color: white; font-weight: bold; }
+              .firing { background-color: #d9534f; }
+              .resolved { background-color: #5cb85c; }
+              .alert-card { border: 1px solid #ddd; padding: 15px; margin-bottom: 10px; border-radius: 4px; }
+            </style>
+          </head>
+          <body>
+            <div class="header {{ if eq .Status "firing" }}firing{{ else }}resolved{{ end }}">
+              DeepLog Pipeline: {{ .Status | toUpper }}
+            </div>
+            <h2>Alert Details</h2>
+            {{ range .Alerts }}
+            <div class="alert-card">
+              <p><strong>Alert:</strong> {{ .Annotations.summary }}</p>
+              <p><strong>Severity:</strong> <span style="color: {{ if eq .Labels.severity "critical" }}red{{ else }}orange{{ end }}; font-weight: bold;">{{ .Labels.severity }}</span></p>
+              <p><strong>Description:</strong> {{ .Annotations.description }}</p>
+              <p><strong>Active Since:</strong> {{ .StartsAt }}</p>
+              <p><a href="{{ .GeneratorURL }}">View in Prometheus</a></p>
+            </div>
+            {{ end }}
+          </body>
+          </html>

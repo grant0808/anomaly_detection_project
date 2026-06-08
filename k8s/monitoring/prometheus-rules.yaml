@@ -1,0 +1,37 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: deeplog-alerts
+  namespace: deeplog
+  labels:
+    release: prometheus-stack
+spec:
+  groups:
+  - name: DeepLogAlerts
+    rules:
+    - alert: DeepLogHighAnomalyRate
+      expr: sum(rate(deeplog_anomalies_detected_total[5m])) / sum(rate(deeplog_logs_processed_total[5m])) > 0.15
+      for: 2m
+      labels:
+        severity: critical
+      annotations:
+        summary: "High anomaly detection rate on DeepLog pipeline"
+        description: "DeepLog anomaly rate is {{ $value | humanizePercentage }}, which is above the 15% threshold for the last 2 minutes."
+    
+    - alert: DeepLogHighInferenceLatency
+      expr: histogram_quantile(0.95, sum(rate(deeplog_inference_latency_seconds_bucket[5m])) by (le)) > 0.5
+      for: 2m
+      labels:
+        severity: warning
+      annotations:
+        summary: "High KServe inference latency"
+        description: "95th percentile of DeepLog inference latency is {{ $value }}s, exceeding the 500ms threshold."
+
+    - alert: DeepLogKafkaConsumerLag
+      expr: sum(deeplog_kafka_lag) by (topic) > 1000
+      for: 3m
+      labels:
+        severity: warning
+      annotations:
+        summary: "Kafka consumer group lag is high"
+        description: "Kafka lag for topic {{ $labels.topic }} is {{ $value }} messages, exceeding 1000 for the last 3 minutes."

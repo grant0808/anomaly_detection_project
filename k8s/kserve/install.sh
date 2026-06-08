@@ -2,7 +2,7 @@
 
 set -euo pipefail
 
-KSERVE_VERSION="${KSERVE_VERSION:-v0.17.0}"
+KSERVE_VERSION="${KSERVE_VERSION:-v0.19.0-rc0}"
 
 echo "=== 1. Installing KServe serverless dependencies: Knative, Istio, cert-manager ==="
 curl -fsSL "https://github.com/kserve/kserve/releases/download/${KSERVE_VERSION}/kserve-knative-mode-dependency-install.sh" | bash

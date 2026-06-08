@@ -1,4 +1,4 @@
-apiVersion: serving.kserve.io/v1beta1
+apiVersion: serving.kserve.io/v1alpha1
 kind: InferenceService
 metadata:
   name: deeplog-serving
@@ -35,4 +35,4 @@ spec:
           limits:
             cpu: "2"
             memory: 2Gi
-    storageUri: gs://deeplog-mlflow-model-registry/deeplog-serving/current
+    storageUri: gs://deeplog-mlflow-model-registry-hbh/deeplog-serving/current

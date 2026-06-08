@@ -8,7 +8,20 @@ from fastapi import FastAPI, BackgroundTasks, HTTPException
 from pydantic import BaseModel
 from kafka import KafkaProducer
 
-app = FastAPI(title="HDFS Mock Log Generator API", version="1.0.0")
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    global producer
+    yield
+    print("Shutting down generators...")
+    for name, info in generators.items():
+        info["running"] = False
+        if info["thread"]:
+            info["thread"].join(timeout=1)
+    if producer:
+        producer.close(timeout=2)
+        print("Kafka producer closed.")
+
+app = FastAPI(title="HDFS Mock Log Generator API", version="1.0.0", lifespan=lifespan)
 
 # Global variables to manage generator threads and state
 generators: Dict[str, Dict] = {
@@ -153,15 +166,4 @@ def get_status():
         "generators": status_data
     }
 
-@asynccontextmanager
-def lifespan():
-    global producer
-    yield
-    print("Shutting down generators...")
-    for name, info in generators.items():
-        info["running"] = False
-        if info["thread"]:
-            info["thread"].join(timeout=1)
-    if producer:
-        producer.close(timeout=2)
-        print("Kafka producer closed.")
+# Lifespan context manager is registered at startup

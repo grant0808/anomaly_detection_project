@@ -39,7 +39,7 @@ resource "google_storage_bucket" "mlflow_registry" {
   # Lifecycle policies to clean up old experiments/runs (optional, example configuration)
   lifecycle_rule {
     condition {
-      age = 90 # Auto-delete artifacts older than 90 days if needed (turned off by default here)
+      age = 30 # Auto-delete artifacts older than 90 days if needed (turned off by default here)
       matches_storage_class = ["STANDARD"]
     }
     action {

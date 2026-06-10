@@ -5,6 +5,7 @@ import time
 import threading
 from typing import Dict, List, Optional
 from fastapi import FastAPI
+from contextlib import asynccontextmanager
 import requests
 from kafka import KafkaConsumer, KafkaProducer
 from prometheus_client import Counter, Histogram, Gauge, make_asgi_app
@@ -12,7 +13,27 @@ from drain3 import TemplateMiner
 from drain3.template_miner_config import TemplateMinerConfig
 from drain3.file_persistence import FilePersistence
 
-app = FastAPI(title="DeepLog Real-time Preprocessing & Inference Service", version="1.0.0")
+# ==========================================
+# FastAPI Lifecycle Hooks
+# ==========================================
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    global consumer_thread, lag_thread, running, consumer_thread, lag_thread
+    running = True
+    consumer_thread = threading.Thread(target=kafka_consumer_worker, daemon=True)
+    consumer_thread.start()
+    lag_thread = threading.Thread(target=kafka_lag_worker, daemon=True)
+    lag_thread.start()
+    print("FastAPI Service started background workers.")
+    yield
+    running = False
+    if consumer_thread:
+        consumer_thread.join(timeout=3)
+    if lag_thread:
+        lag_thread.join(timeout=3)
+    print("FastAPI Service shutdown completed.")
+
+app = FastAPI(title="DeepLog Real-time Preprocessing & Inference Service", lifespan=lifespan, version="1.0.0")
 
 # ==========================================
 # Prometheus Metrics Configuration
@@ -255,28 +276,6 @@ def kafka_lag_worker():
                 print(f"Error checking Kafka lag: {e}")
         time.sleep(15)
 
-# ==========================================
-# FastAPI Lifecycle Hooks
-# ==========================================
-@app.on_event("startup")
-def startup_event():
-    global consumer_thread, lag_thread, running
-    running = True
-    consumer_thread = threading.Thread(target=kafka_consumer_worker, daemon=True)
-    consumer_thread.start()
-    lag_thread = threading.Thread(target=kafka_lag_worker, daemon=True)
-    lag_thread.start()
-    print("FastAPI Service started background workers.")
-
-@app.on_event("shutdown")
-def shutdown_event():
-    global running, consumer_thread, lag_thread
-    running = False
-    if consumer_thread:
-        consumer_thread.join(timeout=3)
-    if lag_thread:
-        lag_thread.join(timeout=3)
-    print("FastAPI Service shutdown completed.")
 
 @app.get("/healthz")
 def healthz():

@@ -22,8 +22,9 @@ class TraceRequest(BaseModel):
     top_g: int | None = None
 
 @asynccontextmanager
-async def lifespan(app: FastAPI) -> None:
+async def lifespan(app: FastAPI):
     load_artifacts()
+    yield
     
 app = FastAPI(title="DeepLog KServe Predictor", version="1.0.0", lifespan=lifespan)
 

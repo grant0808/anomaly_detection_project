@@ -40,7 +40,8 @@ COPY src/parser.py ./src/
 COPY src/vocab.json ./src/
 # Copy the trained Drain3 config
 COPY src/drain3.ini ./src/
+COPY src/drain_state.bin ./src/
 
 EXPOSE 8080
 
-CMD ["gunicorn", "-w", "4", "-k", "uvicorn.workers.UvicornWorker", "src.preprocess_service:app", "--bind", "0.0.0.0:8080"]
+CMD ["gunicorn", "-w", "1", "-k", "uvicorn.workers.UvicornWorker", "src.preprocess_service:app", "--bind", "0.0.0.0:8080"]

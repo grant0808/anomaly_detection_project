@@ -38,9 +38,8 @@ ENV PATH="/opt/venv/bin:$PATH"
 
 # Copy source code and default config
 COPY src/log_generator.py ./src/
-# Note: In production we will mount the raw logs volume at /app/HDFS_v1
-# but for safety, we create a placeholder directory
 RUN mkdir -p /app/HDFS_v1
+COPY src/HDFS_sample.log /app/HDFS_v1/HDFS.log
 
 EXPOSE 8000
 

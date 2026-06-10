@@ -5,6 +5,7 @@ from pathlib import Path
 import torch
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
+from contextlib import asynccontextmanager
 
 from model import DeepLogLSTM
 from preprocess import EventIndexer
@@ -20,8 +21,11 @@ class TraceRequest(BaseModel):
     window_size: int | None = None
     top_g: int | None = None
 
-
-app = FastAPI(title="DeepLog KServe Predictor", version="1.0.0")
+@asynccontextmanager
+async def lifespan(app: FastAPI) -> None:
+    load_artifacts()
+    
+app = FastAPI(title="DeepLog KServe Predictor", version="1.0.0", lifespan=lifespan)
 
 MODEL_NAME = os.getenv("MODEL_NAME", "deeplog")
 MODEL_DIR = Path(os.getenv("MODEL_DIR", "/mnt/models"))
@@ -58,9 +62,7 @@ def load_artifacts() -> None:
     model.eval()
 
 
-@app.on_event("startup")
-def startup() -> None:
-    load_artifacts()
+
 
 
 @app.get("/v1/models/{model_name}")

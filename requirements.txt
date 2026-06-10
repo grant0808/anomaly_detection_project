@@ -1,7 +1,7 @@
 torch
 pandas
 numpy
-drain3
+drain3>=0.9.11
 mlflow
 tqdm
 scikit-learn

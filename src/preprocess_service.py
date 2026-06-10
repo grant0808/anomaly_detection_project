@@ -10,7 +10,7 @@ from kafka import KafkaConsumer, KafkaProducer
 from prometheus_client import Counter, Histogram, Gauge, make_asgi_app
 from drain3 import TemplateMiner
 from drain3.template_miner_config import TemplateMinerConfig
-from drain3.file_persistence_handler import FilePersistenceHandler
+from drain3.file_persistence import FilePersistence
 
 app = FastAPI(title="DeepLog Real-time Preprocessing & Inference Service", version="1.0.0")
 
@@ -117,7 +117,7 @@ def kafka_consumer_worker():
     config.load(drain_config_path)
     
     # Load parser in read-only mode by leveraging persistence handler
-    persistence_handler = FilePersistenceHandler(drain_state_path)
+    persistence_handler = FilePersistence(drain_state_path)
     template_miner = TemplateMiner(persistence_handler=persistence_handler, config=config)
     print(f"Loaded Drain3 TemplateMiner with {len(template_miner.drain.clusters)} templates.")
 

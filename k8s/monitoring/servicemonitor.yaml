@@ -3,6 +3,8 @@ kind: ServiceMonitor
 metadata:
   name: preprocessing-service-monitor
   namespace: deeplog
+  annotations:
+    argocd.argoproj.io/sync-wave: "50"
   labels:
     release: prometheus-stack # Integrates with the kube-prometheus-stack instance
 spec:

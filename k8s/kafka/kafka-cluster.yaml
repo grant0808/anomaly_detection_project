@@ -3,6 +3,8 @@ kind: KafkaNodePool
 metadata:
   name: dual-role
   namespace: deeplog
+  annotations:
+    argocd.argoproj.io/sync-wave: "10"
   labels:
     strimzi.io/cluster: kafka-cluster
 spec:
@@ -23,6 +25,8 @@ kind: Kafka
 metadata:
   name: kafka-cluster
   namespace: deeplog
+  annotations:
+    argocd.argoproj.io/sync-wave: "10"
 spec:
   kafka:
     listeners:

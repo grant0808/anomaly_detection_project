@@ -13,6 +13,7 @@ spec:
     path: k8s
     directory:
       recurse: true
+      exclude: '{monitoring/alertmanager-values.yaml,monitoring/grafana-dashboard.json}'
   destination:
     server: 'https://kubernetes.default.svc'
     namespace: deeplog
@@ -23,3 +24,5 @@ spec:
     syncOptions:
       - CreateNamespace=true
       - ApplyOutOfSyncOnly=true
+      - ServerSideApply=true
+      - SkipDryRunOnMissingResource=true

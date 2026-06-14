@@ -4,6 +4,7 @@ metadata:
   name: deeplog-serving
   namespace: deeplog
   annotations:
+    argocd.argoproj.io/sync-wave: "30"
     serving.kserve.io/deploymentMode: Serverless
 spec:
   predictor:

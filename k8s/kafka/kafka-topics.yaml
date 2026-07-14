@@ -3,6 +3,8 @@ kind: KafkaTopic
 metadata:
   name: hdfs-raw-logs
   namespace: deeplog
+  annotations:
+    argocd.argoproj.io/sync-wave: "20"
   labels:
     strimzi.io/cluster: kafka-cluster
 spec:
@@ -17,6 +19,8 @@ kind: KafkaTopic
 metadata:
   name: processed-windows
   namespace: deeplog
+  annotations:
+    argocd.argoproj.io/sync-wave: "20"
   labels:
     strimzi.io/cluster: kafka-cluster
 spec:
@@ -31,6 +35,8 @@ kind: KafkaTopic
 metadata:
   name: anomaly-alerts
   namespace: deeplog
+  annotations:
+    argocd.argoproj.io/sync-wave: "20"
   labels:
     strimzi.io/cluster: kafka-cluster
 spec:

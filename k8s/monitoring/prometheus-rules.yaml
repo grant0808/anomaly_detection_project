@@ -3,6 +3,8 @@ kind: PrometheusRule
 metadata:
   name: deeplog-alerts
   namespace: deeplog
+  annotations:
+    argocd.argoproj.io/sync-wave: "50"
   labels:
     release: prometheus-stack
 spec:

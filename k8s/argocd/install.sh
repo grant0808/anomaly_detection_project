@@ -18,15 +18,23 @@ echo "=== 3. Exposing ArgoCD Server via LoadBalancer (Optional) ==="
 # kubectl patch svc argocd-server -n argocd -p '{"spec": {"type": "LoadBalancer"}}'
 
 echo "=== 4. Installing Strimzi Kafka Operator ==="
-# Strimzi installation manifest
-kubectl create -f 'https://strimzi.io/install/latest?namespace=deeplog' -n deeplog
+kubectl apply -f 'https://strimzi.io/install/latest?namespace=deeplog' -n deeplog
 
-echo "=== 5. Deploying Declarative ArgoCD Application ==="
+echo "=== 5. Waiting for Strimzi Kafka Operator ==="
+kubectl wait --for=condition=Available deployment/strimzi-cluster-operator -n deeplog --timeout=10m
+
+echo "=== 6. Installing KServe Serverless Stack ==="
+bash k8s/kserve/install.sh
+
+echo "=== 7. Installing Prometheus Operator Stack ==="
+bash k8s/monitoring/install.sh
+
+echo "=== 8. Deploying Declarative ArgoCD Application ==="
 # Apply the GitOps application tracking this repository
 kubectl apply -f k8s/argocd/argocd-app.yaml
 
 echo "======================================================================"
-echo "ArgoCD and Strimzi Operators installed successfully!"
+echo "ArgoCD, Strimzi, KServe, and Prometheus Operator installed successfully!"
 echo "======================================================================"
 echo "To get ArgoCD admin password:"
 echo "  kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath='{.data.password}' | base64 -d; echo"

@@ -17,6 +17,8 @@ echo "=== 3. Installing Kube-Prometheus-Stack ==="
 # Installs Prometheus Operator, Grafana, Alertmanager, Node Exporters
 helm upgrade --install prometheus-stack prometheus-community/kube-prometheus-stack \
   --namespace monitoring \
+  --wait \
+  --timeout 10m \
   --set prometheus.prometheusSpec.serviceMonitorSelectorNilUsesHelmValues=false \
   --set prometheus.prometheusSpec.podMonitorSelectorNilUsesHelmValues=false
 

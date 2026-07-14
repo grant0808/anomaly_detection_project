@@ -16,8 +16,14 @@ variable "gcp_region" {
 
 variable "bucket_name" {
   type        = string
-  default     = "deeplog-mlflow-model-registry"
+  default     = "deeplog-mlflow-model-registry-hbh"
   description = "Name of the GCS bucket for MLflow models"
+}
+
+variable "artifact_repository_id" {
+  type        = string
+  default     = "deeplog-repo"
+  description = "Artifact Registry Docker repository ID for DeepLog images"
 }
 
 resource "google_storage_bucket" "mlflow_registry" {
@@ -56,4 +62,21 @@ resource "google_storage_bucket" "mlflow_registry" {
 output "gcs_bucket_url" {
   value       = google_storage_bucket.mlflow_registry.url
   description = "GCS bucket URL to configure MLflow tracking URI"
+}
+
+resource "google_artifact_registry_repository" "deeplog_repo" {
+  location      = var.gcp_region
+  repository_id = var.artifact_repository_id
+  description   = "Docker repository for DeepLog pipeline images"
+  format        = "DOCKER"
+
+  labels = {
+    environment = "dev"
+    project     = "deeplog-anomaly-detection"
+  }
+}
+
+output "artifact_registry_repository" {
+  value       = "${var.gcp_region}-docker.pkg.dev/${var.gcp_project_id}/${google_artifact_registry_repository.deeplog_repo.repository_id}"
+  description = "Artifact Registry Docker repository URL"
 }

@@ -3,6 +3,8 @@ kind: Deployment
 metadata:
   name: preprocessing-service
   namespace: deeplog
+  annotations:
+    argocd.argoproj.io/sync-wave: "40"
   labels:
     app: preprocessing-service
 spec:
@@ -24,9 +26,9 @@ spec:
         env:
         - name: KAFKA_BOOTSTRAP_SERVERS
           value: "kafka-cluster-kafka-bootstrap.deeplog.svc:9092"
-        - name: RAW_LOG_TOPIC
+        - name: KAFKA_RAW_TOPIC
           value: "hdfs-raw-logs"
-        - name: ALERT_TOPIC
+        - name: KAFKA_ALERT_TOPIC
           value: "anomaly-alerts"
         - name: KSERVE_ENDPOINT
           value: "http://deeplog-serving-predictor.deeplog.svc.cluster.local/v1/models/deeplog:predict"
@@ -47,6 +49,8 @@ kind: Service
 metadata:
   name: preprocessing-service
   namespace: deeplog
+  annotations:
+    argocd.argoproj.io/sync-wave: "40"
 spec:
   selector:
     app: preprocessing-service

@@ -1,0 +1,34 @@
+apiVersion: serving.kserve.io/v1beta1
+kind: InferenceService
+metadata:
+  name: deeplog-serving
+  namespace: deeplog
+spec:
+  predictor:
+    containers:
+      - name: kserve-container
+        image: dev.local/deeplog-predictor:local
+        imagePullPolicy: IfNotPresent
+        env:
+          - name: MODEL_NAME
+            value: deeplog
+          - name: MODEL_DIR
+            value: /mnt/models
+          - name: VOCAB_PATH
+            value: /mnt/models/vocab.json
+          - name: WEIGHTS_PATH
+            value: /mnt/models/deeplog_lstm.pth
+        resources:
+          requests:
+            cpu: 200m
+            memory: 512Mi
+          limits:
+            cpu: 500m
+            memory: 1Gi
+        volumeMounts:
+          - name: model-volume
+            mountPath: /mnt/models
+    volumes:
+      - name: model-volume
+        configMap:
+          name: deeplog-model-config

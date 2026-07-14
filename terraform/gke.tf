@@ -37,6 +37,7 @@ resource "google_container_cluster" "primary" {
   # We use a separated node pool resource, so we delete the default node pool upon creation
   remove_default_node_pool = true
   initial_node_count       = 1
+  deletion_protection = false
 
   ip_allocation_policy {
     cluster_secondary_range_name  = "gke-pods-range"
@@ -58,11 +59,11 @@ resource "google_container_node_pool" "primary_nodes" {
   name       = "deeplog-node-pool"
   location   = var.gcp_region
   cluster    = google_container_cluster.primary.name
-  node_count = 2
+  initial_node_count = 2
 
   autoscaling {
-    min_node_count = 2
-    max_node_count = 5
+    min_node_count = 1
+    max_node_count = 3
   }
 
   management {
